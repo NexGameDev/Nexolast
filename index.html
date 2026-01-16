@@ -1,60 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NexLast</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexolast — Block Blast Remake</title>
 
-<!-- SINGLE CSS FILE -->
-<link rel="stylesheet" href="css/all.css">
+  <!-- MAIN CSS (GABUNGAN SEMUA CSS) -->
+  <link rel="stylesheet" href="all.css" />
 </head>
 <body>
 
-<!-- =========================
-     TOP BAR
-========================= -->
-<div id="top-bar">
-  <div class="score-box">
-    <span>SCORE</span>
-    <strong id="score">0</strong>
+  <!-- ================= LOADING ================= -->
+  <div id="loadingScreen" class="loading-screen">
+    <h1>NEXOLAST</h1>
+    <p>Loading...</p>
   </div>
 
-  <div class="coin-box">
-    <span>NEX</span>
-    <strong id="coin">0</strong>
+  <!-- ================= GAME UI ================= -->
+  <div id="gameContainer" class="game-container hidden">
+
+    <!-- TOP BAR -->
+    <header class="top-bar">
+      <h2>NEXOLAST</h2>
+      <div class="score-box">
+        <span>Score</span>
+        <strong id="score">0</strong>
+      </div>
+    </header>
+
+    <!-- BOARD -->
+    <main class="board-wrapper">
+      <div id="board" class="board">
+        <!-- grid dibuat lewat JS -->
+      </div>
+    </main>
+
+    <!-- BLOCK SHOP -->
+    <section class="block-shop">
+      <h3>Blocks</h3>
+      <div id="blockContainer" class="block-container">
+        <!-- block random muncul dari JS -->
+      </div>
+    </section>
+
+    <!-- UI BOTTOM -->
+    <footer class="bottom-ui">
+      <button id="resetBtn" class="btn danger">Reset</button>
+      <button id="shuffleBtn" class="btn">Shuffle</button>
+    </footer>
+
   </div>
 
-  <button id="shop-btn">SHOP</button>
-</div>
-
-<!-- =========================
-     GAME BOARD + TRAY
-========================= -->
-<div id="game">
-  <div id="board"></div>
-
-  <div id="tray">
-    <div class="slot"></div>
-    <div class="slot"></div>
-    <div class="slot"></div>
-  </div>
-</div>
-
-<!-- =========================
-     SHOP
-========================= -->
-<div id="shop">
-  <h2>SHOP</h2>
-  <button id="booster-x2">
-    2× SCORE <span>5 NEX</span>
-  </button>
-  <button id="close-shop">CLOSE</button>
-</div>
-
-<!-- =========================
-     SINGLE JS FILE
-========================= -->
-<script src="js/all.js"></script>
-
+  <!-- ================= JAVASCRIPT ================= -->
+  <!-- SEMUA LOGIC, RANDOMIZER, ANIMATION -->
+  <script src="all.js"></script>
 </body>
 </html>
