@@ -1,0 +1,198 @@
+/* =========================
+   MAIN STYLES
+========================= */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: radial-gradient(circle at top, #ffecd2, #fcb69f);
+  color: #fff;
+  overflow-x: hidden;
+}
+
+#top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #222;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+#top-bar .score-box, #top-bar .coin-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 14px;
+}
+
+#top-bar .score-box strong, #top-bar .coin-box strong {
+  font-size: 20px;
+  color: #00ffcc;
+}
+
+#shop-btn {
+  padding: 6px 12px;
+  background: #ff6f61;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#shop-btn:hover {
+  background: #ff3b2d;
+}
+
+/* =========================
+   BOARD STYLES
+========================= */
+#game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+#board {
+  display: grid;
+  grid-template-columns: repeat(8, 50px);
+  grid-template-rows: repeat(8, 50px);
+  gap: 4px;
+  background: #111;
+  padding: 8px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+.cell {
+  width: 50px;
+  height: 50px;
+  background: #222;
+  border-radius: 5px;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.cell.highlight {
+  background: rgba(0, 255, 255, 0.5);
+}
+
+/* =========================
+   BLOCKS / TRAY
+========================= */
+#tray {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+  gap: 8px;
+}
+
+.slot {
+  width: 60px;
+  height: 60px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.block {
+  width: 50px;
+  height: 50px;
+  border-radius: 5px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  color: #fff;
+  transition: all 0.2s;
+}
+
+.block.red { background: #ff4c4c; }
+.block.blue { background: #4c6fff; }
+.block.green { background: #4cff6f; }
+.block.yellow { background: #fff64c; }
+.block.purple { background: #b24cff; }
+.block.orange { background: #ff9b4c; }
+
+/* =========================
+   SHOP
+========================= */
+#shop {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.7);
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 200;
+}
+
+#shop h2 {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  color: #00ffcc;
+  text-align: center;
+}
+
+#shop button {
+  padding: 10px;
+  background: linear-gradient(90deg, #ff6f61, #ff3b2d);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#shop button:hover {
+  background: linear-gradient(90deg, #ff3b2d, #ff6f61);
+}
+
+#shop .hidden {
+  display: none;
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+@keyframes pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.block.pop {
+  animation: pop 0.3s forwards;
+}
+
+.cell.clear-animation {
+  animation: pop 0.25s forwards;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 600px) {
+  #board {
+    grid-template-columns: repeat(8, 35px);
+    grid-template-rows: repeat(8, 35px);
+  }
+
+  .cell { width: 35px; height: 35px; }
+  .slot { width: 40px; height: 40px; }
+  .block { width: 35px; height: 35px; font-size: 12px; }
+}
