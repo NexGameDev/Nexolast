@@ -1,0 +1,225 @@
+/* ==============================
+   RESET & BASE
+============================== */
+*{
+  box-sizing:border-box;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#ffffff;
+  color:#222;
+  display:flex;
+  justify-content:center;
+}
+#game{
+  width:100%;
+  max-width:420px;
+  padding:10px;
+}
+
+/* ==============================
+   TOP BAR
+============================== */
+#top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+.score-box,.coin-box{
+  background:#f2f2f2;
+  border-radius:10px;
+  padding:6px 12px;
+  font-weight:700;
+}
+#shop-btn{
+  background:#ffcc00;
+  border:none;
+  border-radius:8px;
+  padding:8px 14px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+/* ==============================
+   BOARD 8x8
+============================== */
+#board{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:4px;
+  background:#e6e6e6;
+  padding:6px;
+  border-radius:12px;
+}
+.cell{
+  width:100%;
+  aspect-ratio:1/1;
+  background:#ffffff;
+  border-radius:6px;
+  position:relative;
+  overflow:hidden;
+}
+.cell::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:6px;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);
+}
+.cell.filled{
+  background:#aaa;
+}
+
+/* ==============================
+   BLOCK TRAY
+============================== */
+#tray{
+  margin-top:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+.slot{
+  flex:1;
+  min-height:80px;
+  background:#f5f5f5;
+  border-radius:12px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* ==============================
+   BLOCKS
+============================== */
+.block{
+  display:grid;
+  gap:3px;
+}
+.block-cell{
+  width:22px;
+  height:22px;
+  border-radius:4px;
+  position:relative;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.3),
+    0 2px 4px rgba(0,0,0,.2);
+}
+
+/* TEXTURE */
+.block-cell::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 20%,rgba(255,255,255,.35),transparent 40%),
+    radial-gradient(circle at 80% 80%,rgba(0,0,0,.15),transparent 40%);
+  border-radius:4px;
+}
+
+/* COLORS */
+.block-cell.blue{
+  background:linear-gradient(145deg,#6ecbff,#1e90ff);
+}
+.block-cell.red{
+  background:linear-gradient(145deg,#ff6b6b,#d63031);
+}
+.block-cell.green{
+  background:linear-gradient(145deg,#7bed9f,#2ecc71);
+}
+.block-cell.purple{
+  background:linear-gradient(145deg,#c77dff,#8a2be2);
+}
+
+/* ==============================
+   DRAG EFFECT
+============================== */
+.block.dragging{
+  opacity:.8;
+  transform:scale(1.1);
+  z-index:10;
+}
+
+/* ==============================
+   PREVIEW / VALIDATION
+============================== */
+.cell.preview{
+  background:
+    linear-gradient(145deg,#7cffb2,#32d27a);
+  opacity:.6;
+}
+.cell.invalid{
+  background:
+    linear-gradient(145deg,#ff7c7c,#d23232);
+  opacity:.6;
+}
+
+/* ==============================
+   CLEAR ANIMATION
+============================== */
+@keyframes pop{
+  0%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.25)}
+  100%{transform:scale(0);opacity:0}
+}
+.cell.clearing{
+  animation:pop .3s ease forwards;
+}
+
+/* ==============================
+   SHOP
+============================== */
+#shop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+#shop.active{display:flex;}
+#shop > div{
+  background:white;
+  border-radius:14px;
+  padding:20px;
+  width:80%;
+}
+#shop button{
+  width:100%;
+  margin-top:10px;
+  padding:10px;
+  font-weight:800;
+  border:none;
+  border-radius:8px;
+  background:#ffcc00;
+}
+
+/* ==============================
+   GAME OVER
+============================== */
+#game-over{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:white;
+  font-size:32px;
+  font-weight:900;
+  z-index:99;
+}
+
+/* ==============================
+   RESPONSIVE
+============================== */
+@media(max-width:480px){
+  .block-cell{
+    width:20px;
+    height:20px;
+  }
+}
