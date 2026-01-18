@@ -2,35 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>NEXOLAST</title>
-
-  <!-- FONT BLOCKY -->
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-
+  <title>Block Blast Simple</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div class="game">
-    <div class="title">NEXOLAST</div>
+<h1>Block Blast</h1>
+<p>Score: <span id="score">0</span></p>
 
-    <div class="top">
-      <div class="box">
-        SCORE<br>
-        <span id="score">0</span>
-      </div>
-      <div class="box">
-        BEST<br>
-        <span id="best">0</span>
-      </div>
-    </div>
+<div id="game">
+  <div id="board"></div>
+  <div id="blocks"></div>
+</div>
 
-    <div class="board"></div>
-
-    <div class="pieces"></div>
-  </div>
-
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
