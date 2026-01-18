@@ -1,130 +1,176 @@
+/* ===============================
+   RESET & GLOBAL
+=============================== */
 * {
   box-sizing: border-box;
-  user-select: none;
+  margin: 0;
+  padding: 0;
   -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
-  margin: 0;
-  padding: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: hidden; /* NO SCROLL */
   background: #000;
-  font-family: 'Press Start 2P', monospace;
+  font-family: Arial, Helvetica, sans-serif;
+  touch-action: manipulation; /* JANGAN none */
+  user-select: none;
 }
 
-:root {
-  --vh: 1vh;
-}
-
-body {
-  min-height: calc(var(--vh) * 100);
-  display: flex;
-  justify-content: center;
-}
-
-.game {
-  width: 100%;
-  max-width: 420px;
-  height: 100%;
+/* ===============================
+   APP WRAPPER
+=============================== */
+#app {
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0 16px;
 }
 
-/* ===== HEADER ===== */
-.title {
-  color: #fff;
-  font-size: 22px;
-  margin-bottom: 6px;
-}
-
-.top {
-  display: flex;
-  gap: 14px;
-}
-
-.box {
-  background: #111;
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 10px;
+/* ===============================
+   HEADER
+=============================== */
+header {
+  padding-top: 18px;
   text-align: center;
 }
 
-/* ===== BOARD ===== */
-.board {
-  width: 90vw;
-  max-width: 340px;
-  aspect-ratio: 1;
+.title {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #fff;
+}
+
+.score-wrap {
+  margin-top: 10px;
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+}
+
+.score-box {
   background: #111;
-  border-radius: 18px;
-  padding: 10px;
+  border-radius: 14px;
+  padding: 10px 18px;
+  text-align: center;
+  min-width: 90px;
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+}
+
+.score-box span {
+  display: block;
+  font-size: 12px;
+  opacity: 0.7;
+  color: #fff;
+}
+
+.score-box strong {
+  font-size: 18px;
+  color: #fff;
+}
+
+/* ===============================
+   BOARD AREA
+=============================== */
+.board-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.board {
+  width: min(90vw, 360px);
+  aspect-ratio: 1 / 1;
+  background: #0b0b0b;
+  border-radius: 24px;
+  padding: 12px;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
   gap: 6px;
+  box-shadow:
+    inset 0 0 30px rgba(255,255,255,0.03),
+    0 20px 40px rgba(0,0,0,0.7);
 }
 
+/* ===============================
+   BOARD CELLS
+=============================== */
 .cell {
-  background: #1a1a1a;
-  border-radius: 8px;
-  box-shadow: inset 0 0 0 1px #222;
+  background: #161616;
+  border-radius: 10px;
+  box-shadow:
+    inset 0 0 6px rgba(255,255,255,0.06);
 }
 
+/* filled cell (nanti dipakai JS) */
 .cell.filled {
   background: #e11d48;
-  box-shadow: inset 0 -3px 0 rgba(0,0,0,.25);
+  box-shadow:
+    inset 0 0 8px rgba(255,255,255,0.35),
+    0 0 10px rgba(225,29,72,0.6);
 }
 
-/* ===== PIECES ===== */
-.pieces {
-  position: relative;
+/* ===============================
+   BLOCK TRAY
+=============================== */
+.block-tray {
   width: 100%;
-  height: 110px;
+  padding: 14px 0 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
 }
 
-.piece {
-  position: absolute;
-  touch-action: none;
+/* ===============================
+   BLOCK PIECE
+=============================== */
+.block-piece {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  touch-action: none; /* BIAR DRAG PRESISI */
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-.piece.dragging {
-  z-index: 999;
+/* saat dipegang */
+.block-piece.dragging {
   transform: scale(1.05);
+  opacity: 0.9;
 }
 
-.block {
+/* ===============================
+   BLOCK TILE
+=============================== */
+.block-tile {
   width: 28px;
   height: 28px;
   background: #e11d48;
-  border-radius: 6px;
-  position: absolute;
+  border-radius: 7px;
+  box-shadow:
+    inset 0 0 6px rgba(255,255,255,0.35),
+    0 4px 10px rgba(225,29,72,0.7);
 }
 
-.ghost-valid .block {
-  background: rgba(0,255,0,.45);
-}
-
-.ghost-invalid .block {
-  background: rgba(255,0,0,.45);
-}
-
-/* ===== FLOAT TEXT ===== */
-.float {
-  position: absolute;
-  color: #ffd700;
-  font-size: 12px;
-  animation: float 1s ease-out forwards;
-}
-
-@keyframes float {
-  to {
-    transform: translateY(-30px);
-    opacity: 0;
+/* ===============================
+   RESPONSIVE HP KECIL
+=============================== */
+@media (max-height: 650px) {
+  .title {
+    font-size: 30px;
   }
-}
+
+  .block-tile {
+    width: 24px;
+    height: 24px;
+  }
+
+  .board {
+    width: min(88vw, 320px);
+  }
+                       }
