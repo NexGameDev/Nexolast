@@ -64,7 +64,7 @@ html, body {
 }
 
 /* =========================
-   MAIN AREA
+   MAIN AREA (BOARD DINAIKKAN)
 ========================= */
 #main {
   flex: 1;
@@ -73,18 +73,23 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;   /* ⬅️ penting */
+  padding-top: 20px;             /* ⬅️ jarak dari header */
 }
 
 /* =========================
-   BOARD
+   BOARD (HANYA POSISI)
 ========================= */
 #board-wrapper {
   background: #0d0d0d;
   padding: 10px;
   border-radius: 18px;
+
+  margin-top: 0;                 /* reset */
+  transform: translateY(-30px);  /* ⬅️ NAIK KE ATAS */
 }
 
+/* BOARD GRID */
 #board {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -109,7 +114,7 @@ html, body {
 
 /* FILLED CELL */
 .cell.filled {
-  background: #e11d48; /* RED BLOCK */
+  background: #e11d48;
   box-shadow:
     inset 3px 3px rgba(255,255,255,0.25),
     inset -3px -3px rgba(0,0,0,0.35);
@@ -128,7 +133,7 @@ html, body {
    BLOCK LIST
 ========================= */
 #block-list {
-  margin-top: 16px;
+  margin-top: 6px; /* ikut naik karena board naik */
   display: flex;
   gap: 20px;
 }
@@ -240,4 +245,4 @@ html, body {
 
 #restart:active {
   transform: scale(0.95);
-      }
+}
