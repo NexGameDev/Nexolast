@@ -1,189 +1,231 @@
 /* =========================
    GLOBAL RESET & MOBILE LOCK
 ========================= */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  touch-action: none;
-  font-family: 'Press Start 2P', monospace;
-  background: #000;
-  color: #fff;
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  touch-action:none;
+  font-family:'Press Start 2P', monospace;
+  background:#000;
+  color:#fff;
 }
 
 /* =========================
    APP ROOT
 ========================= */
-#app {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+#app{
+  width:100vw;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
 
 /* =========================
    HEADER
 ========================= */
-#header {
-  padding: 12px 0 10px;
-  text-align: center;
-  flex-shrink: 0;
+#header{
+  padding:10px 0 4px;
+  text-align:center;
 }
 
-#game-title {
-  font-size: 18px;
-  letter-spacing: 2px;
+#game-title{
+  font-size:16px;
+  letter-spacing:2px;
 }
 
-#score-panel {
-  display: flex;
-  gap: 24px;
-  justify-content: center;
-  margin-top: 8px;
+#score-panel{
+  display:flex;
+  gap:20px;
+  justify-content:center;
+  margin-top:6px;
 }
 
-.score-box {
-  background: #111;
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 9px;
+.score-box{
+  background:#111;
+  border-radius:8px;
+  padding:6px 10px;
+  font-size:9px;
 }
 
-.score-box .label {
-  display: block;
-  opacity: 0.7;
-  margin-bottom: 4px;
-}
-
-/* =========================
-   MAIN AREA (FIX KRUSIAL)
-========================= */
-#main {
-  flex: 1;
-  width: 100%;
-  max-width: 420px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center; /* ⬅️ FIX UTAMA BIAR BOARD TIDAK KE ATAS */
+.score-box .label{
+  display:block;
+  opacity:.7;
+  margin-bottom:4px;
 }
 
 /* =========================
-   BOARD (POSISI AMAN DI HP)
+   MAIN AREA (POSISI AMAN HP)
 ========================= */
-#board-wrapper {
-  background: #0d0d0d;
-  padding: 10px;
-  border-radius: 18px;
-  margin-top: 12px; /* pas: tidak nabrak score, tidak kepotong bawah */
+#main{
+  flex:1;
+  width:100%;
+  max-width:420px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  padding-top:12px; /* ⬅️ jarak aman dari header */
 }
 
-#board {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(8, 1fr);
-  gap: 6px;
-  width: 300px;
-  height: 300px;
+/* =========================
+   BOARD WRAPPER
+========================= */
+#board-wrapper{
+  background:#0d0d0d;
+  padding:10px;
+  border-radius:18px;
+  margin-top:10px; /* ⬅️ turun sedikit, gak nabrak score */
 }
 
-.cell {
-  background: #1a1a1a;
-  border-radius: 8px;
+/* =========================
+   BOARD GRID
+========================= */
+#board{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  grid-template-rows:repeat(8,1fr);
+  gap:6px;
+  width:300px;
+  height:300px;
+}
+
+/* BOARD CELL */
+.cell{
+  background:#1a1a1a;
+  border-radius:8px;
   box-shadow:
-    inset 2px 2px rgba(255,255,255,0.05),
-    inset -2px -2px rgba(0,0,0,0.6);
+    inset 2px 2px rgba(255,255,255,.05),
+    inset -2px -2px rgba(0,0,0,.6);
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
 
-.cell.filled {
-  background: #e11d48;
+.cell.filled{
+  background:#e11d48;
   box-shadow:
-    inset 3px 3px rgba(255,255,255,0.25),
-    inset -3px -3px rgba(0,0,0,0.35);
+    inset 3px 3px rgba(255,255,255,.25),
+    inset -3px -3px rgba(0,0,0,.35);
 }
 
-.cell.preview-valid {
-  outline: 3px solid #22c55e;
-}
-
-.cell.preview-invalid {
-  outline: 3px solid #ef4444;
-}
+.cell.preview-valid{ outline:3px solid #22c55e; }
+.cell.preview-invalid{ outline:3px solid #ef4444; }
 
 /* =========================
    BLOCK LIST
 ========================= */
-#block-list {
-  margin-top: 16px;
-  display: flex;
-  gap: 20px;
+#block-list{
+  margin-top:14px; /* ⬅️ jarak nyaman dari board */
+  display:flex;
+  gap:18px;
 }
 
-.block {
-  display: grid;
-  gap: 4px;
-  cursor: pointer;
+/* SINGLE BLOCK */
+.block{
+  display:grid;
+  gap:4px;
+  cursor:grab;
+  transform-origin:center;
+  transition:transform .15s ease;
 }
 
-.block.selected {
-  outline: 3px solid #22c55e;
-  border-radius: 8px;
+.block:active{
+  transform:scale(.95);
 }
 
-.block div {
-  width: 26px;
-  height: 26px;
-  background: #e11d48;
-  border-radius: 6px;
+/* BLOCK TILE */
+.block div{
+  width:26px;
+  height:26px;
+  background:#e11d48;
+  border-radius:6px;
   box-shadow:
-    inset 2px 2px rgba(255,255,255,0.25),
-    inset -2px -2px rgba(0,0,0,0.35);
+    inset 2px 2px rgba(255,255,255,.25),
+    inset -2px -2px rgba(0,0,0,.35);
 }
 
 /* =========================
-   FX LAYER (COMBO AMAN)
+   ANIMATIONS
 ========================= */
-#fx-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
+@keyframes pop{
+  0%{transform:scale(.8);opacity:0}
+  100%{transform:scale(1);opacity:1}
 }
 
-.floating-text {
-  position: absolute;
-  top: 100px; /* aman, tidak ketutup header */
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 14px;
-  animation: floatUp 0.8s ease-out forwards;
+@keyframes clear{
+  0%{transform:scale(1);opacity:1}
+  100%{transform:scale(.3);opacity:0}
 }
 
-@keyframes floatUp {
-  from { opacity: 1; transform: translate(-50%, 0); }
-  to { opacity: 0; transform: translate(-50%, -40px); }
+@keyframes floatUp{
+  0%{transform:translateY(0) scale(1);opacity:1}
+  100%{transform:translateY(-40px) scale(1.2);opacity:0}
+}
+
+.pop{ animation:pop .15s ease-out; }
+.clear{ animation:clear .2s ease-in forwards; }
+
+/* =========================
+   FX LAYER (SCORE / COMBO)
+========================= */
+#fx-layer{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+}
+
+.floating-text{
+  position:absolute;
+  color:#fff;
+  font-size:12px;
+  animation:floatUp .6s ease-out forwards;
 }
 
 /* =========================
    GAME OVER
 ========================= */
-#game-over {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+#game-over{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-#game-over.hidden {
-  display: none;
+#game-over.hidden{ display:none; }
+
+.game-over-box{
+  background:#111;
+  padding:24px;
+  border-radius:12px;
+  text-align:center;
 }
+
+.game-over-box h2{
+  margin-bottom:16px;
+  font-size:14px;
+}
+
+#restart{
+  font-family:inherit;
+  font-size:10px;
+  padding:10px 16px;
+  background:#e11d48;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+#restart:active{
+  transform:scale(.95);
+     }
