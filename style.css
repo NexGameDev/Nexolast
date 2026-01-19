@@ -34,7 +34,7 @@ html, body {
    HEADER
 ========================= */
 #header {
-  padding: 12px 0 6px;
+  padding: 12px 0 10px;
   text-align: center;
 }
 
@@ -64,7 +64,7 @@ html, body {
 }
 
 /* =========================
-   MAIN AREA (BOARD DINAIKKAN)
+   MAIN AREA
 ========================= */
 #main {
   flex: 1;
@@ -73,23 +73,18 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;   /* ⬅️ penting */
-  padding-top: 20px;             /* ⬅️ jarak dari header */
 }
 
 /* =========================
-   BOARD (HANYA POSISI)
+   BOARD (DITURUNKAN SEDIKIT)
 ========================= */
 #board-wrapper {
   background: #0d0d0d;
   padding: 10px;
   border-radius: 18px;
-
-  margin-top: 0;                 /* reset */
-  transform: translateY(-30px);  /* ⬅️ NAIK KE ATAS */
+  margin-top: 14px; /* ⬅️ INI YANG DITURUNKAN */
 }
 
-/* BOARD GRID */
 #board {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -99,20 +94,14 @@ html, body {
   height: 300px;
 }
 
-/* BOARD CELL */
 .cell {
   background: #1a1a1a;
   border-radius: 8px;
   box-shadow:
     inset 2px 2px rgba(255,255,255,0.05),
     inset -2px -2px rgba(0,0,0,0.6);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.15s ease;
 }
 
-/* FILLED CELL */
 .cell.filled {
   background: #e11d48;
   box-shadow:
@@ -120,7 +109,6 @@ html, body {
     inset -3px -3px rgba(0,0,0,0.35);
 }
 
-/* PREVIEW STATES */
 .cell.preview-valid {
   outline: 3px solid #22c55e;
 }
@@ -133,25 +121,22 @@ html, body {
    BLOCK LIST
 ========================= */
 #block-list {
-  margin-top: 6px; /* ikut naik karena board naik */
+  margin-top: 18px;
   display: flex;
   gap: 20px;
 }
 
-/* SINGLE BLOCK */
 .block {
   display: grid;
   gap: 4px;
-  cursor: grab;
-  transform-origin: center;
-  transition: transform 0.15s ease;
+  cursor: pointer;
 }
 
-.block:active {
-  transform: scale(0.95);
+.block.selected {
+  outline: 3px solid #22c55e;
+  border-radius: 8px;
 }
 
-/* BLOCK TILE */
 .block div {
   width: 26px;
   height: 26px;
@@ -163,33 +148,7 @@ html, body {
 }
 
 /* =========================
-   ANIMATIONS
-========================= */
-@keyframes pop {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes clear {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(0.3); opacity: 0; }
-}
-
-@keyframes floatUp {
-  0% { transform: translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
-}
-
-.pop {
-  animation: pop 0.15s ease-out;
-}
-
-.clear {
-  animation: clear 0.2s ease-in forwards;
-}
-
-/* =========================
-   FX LAYER (SCORE / COMBO)
+   FX LAYER (COMBO TIDAK KEPOONG)
 ========================= */
 #fx-layer {
   position: fixed;
@@ -199,9 +158,16 @@ html, body {
 
 .floating-text {
   position: absolute;
-  color: #fff;
-  font-size: 12px;
-  animation: floatUp 0.6s ease-out forwards;
+  top: 90px; /* ⬅️ COMBO PINDAH KE SINI */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  animation: floatUp 0.8s ease-out forwards;
+}
+
+@keyframes floatUp {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -40px); }
 }
 
 /* =========================
@@ -218,31 +184,4 @@ html, body {
 
 #game-over.hidden {
   display: none;
-}
-
-.game-over-box {
-  background: #111;
-  padding: 24px;
-  border-radius: 12px;
-  text-align: center;
-}
-
-.game-over-box h2 {
-  margin-bottom: 16px;
-  font-size: 14px;
-}
-
-#restart {
-  font-family: inherit;
-  font-size: 10px;
-  padding: 10px 16px;
-  background: #e11d48;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-#restart:active {
-  transform: scale(0.95);
 }
