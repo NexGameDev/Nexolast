@@ -7,7 +7,10 @@ const blockListEl = document.getElementById("block-list");
 const fxLayer = document.getElementById("fx-layer");
 
 let board = [];
-let selectedBlock = null;
+let draggingBlock = null;
+let ghostEl = null;
+let ghostOffset = { x: 0, y: 0 };
+
 let score = 0;
 let best = localStorage.getItem("nexolast-best") || 0;
 
@@ -17,7 +20,7 @@ scoreEl.textContent = score;
 bestEl.textContent = best;
 
 /* =========================
-   BLOCK SHAPES (VARIASI)
+   BLOCK SHAPES
 ========================= */
 const SHAPES = [
   [[1]],
@@ -53,7 +56,6 @@ function initBoard() {
 ========================= */
 function generateBlocks() {
   blockListEl.innerHTML = "";
-
   let guaranteed = false;
 
   for (let i = 0; i < 3; i++) {
@@ -66,11 +68,7 @@ function generateBlocks() {
         guaranteed = true;
       }
     }
-
-    if (!shape) {
-      shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-    }
-
+    if (!shape) shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
     createBlock(shape);
   }
 }
@@ -79,7 +77,6 @@ function createBlock(shape) {
   const block = document.createElement("div");
   block.className = "block";
   block.shape = shape;
-
   block.style.gridTemplateColumns = `repeat(${shape[0].length}, 1fr)`;
 
   shape.forEach(row => {
@@ -90,42 +87,104 @@ function createBlock(shape) {
     });
   });
 
-  block.addEventListener("click", () => selectBlock(block));
+  block.addEventListener("pointerdown", e => startDrag(e, block));
   blockListEl.appendChild(block);
 }
 
 /* =========================
-   BLOCK SELECT
+   DRAG SYSTEM
 ========================= */
-function selectBlock(block) {
-  document.querySelectorAll(".block").forEach(b => b.classList.remove("selected"));
+function startDrag(e, block) {
+  draggingBlock = block;
   block.classList.add("selected");
-  selectedBlock = block;
+
+  ghostEl = block.cloneNode(true);
+  ghostEl.style.position = "fixed";
+  ghostEl.style.pointerEvents = "none";
+  ghostEl.style.opacity = "0.8";
+  ghostEl.style.zIndex = "999";
+  document.body.appendChild(ghostEl);
+
+  const rect = block.getBoundingClientRect();
+  ghostOffset.x = e.clientX - rect.left;
+  ghostOffset.y = e.clientY - rect.top;
+
+  moveGhost(e);
+  document.addEventListener("pointermove", moveGhost);
+  document.addEventListener("pointerup", endDrag);
 }
 
-/* =========================
-   BOARD INTERACTION
-========================= */
-boardEl.addEventListener("click", e => {
-  if (!selectedBlock || !e.target.classList.contains("cell")) return;
+function moveGhost(e) {
+  if (!ghostEl) return;
 
-  const index = +e.target.dataset.index;
+  ghostEl.style.left = e.clientX - ghostOffset.x + "px";
+  ghostEl.style.top = e.clientY - ghostOffset.y + "px";
+
+  clearPreview();
+
+  const cell = getCellFromPoint(e.clientX, e.clientY);
+  if (!cell) return;
+
+  const index = +cell.dataset.index;
   const x = index % BOARD_SIZE;
   const y = Math.floor(index / BOARD_SIZE);
 
-  if (canPlace(selectedBlock.shape, x, y)) {
-    placeBlock(selectedBlock.shape, x, y);
-    selectedBlock.remove();
-    selectedBlock = null;
+  const valid = canPlace(draggingBlock.shape, x, y);
+  previewPlacement(draggingBlock.shape, x, y, valid);
+}
 
-    checkClear();
-    if (!blockListEl.children.length) generateBlocks();
-    if (isGameOver()) showGameOver();
+function endDrag(e) {
+  document.removeEventListener("pointermove", moveGhost);
+  document.removeEventListener("pointerup", endDrag);
+
+  clearPreview();
+
+  const cell = getCellFromPoint(e.clientX, e.clientY);
+  if (cell) {
+    const index = +cell.dataset.index;
+    const x = index % BOARD_SIZE;
+    const y = Math.floor(index / BOARD_SIZE);
+
+    if (canPlace(draggingBlock.shape, x, y)) {
+      placeBlock(draggingBlock.shape, x, y);
+      draggingBlock.remove();
+      checkClear();
+      if (!blockListEl.children.length) generateBlocks();
+      if (isGameOver()) showGameOver();
+    }
   }
-});
+
+  draggingBlock.classList.remove("selected");
+  draggingBlock = null;
+  ghostEl?.remove();
+  ghostEl = null;
+}
 
 /* =========================
-   PLACE BLOCK
+   PREVIEW / HIGHLIGHT
+========================= */
+function previewPlacement(shape, x, y, valid) {
+  shape.forEach((row, r) => {
+    row.forEach((cell, c) => {
+      if (!cell) return;
+      const nx = x + c;
+      const ny = y + r;
+      if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) return;
+      const idx = ny * BOARD_SIZE + nx;
+      boardEl.children[idx].classList.add(
+        valid ? "preview-valid" : "preview-invalid"
+      );
+    });
+  });
+}
+
+function clearPreview() {
+  document.querySelectorAll(".cell.preview-valid, .cell.preview-invalid")
+    .forEach(c => c.classList.remove("preview-valid", "preview-invalid"));
+}
+
+/* =========================
+   BOARD LOGIC
 ========================= */
 function canPlace(shape, x, y) {
   for (let r = 0; r < shape.length; r++) {
@@ -148,16 +207,17 @@ function canPlaceAnywhere(shape) {
 }
 
 function placeBlock(shape, x, y) {
+  let added = 0;
   shape.forEach((row, r) => {
     row.forEach((cell, c) => {
       if (!cell) return;
       const idx = (y + r) * BOARD_SIZE + (x + c);
       board[idx] = 1;
       boardEl.children[idx].classList.add("filled", "pop");
+      added++;
     });
   });
-
-  score += shape.flat().filter(Boolean).length * 10;
+  score += added * 10;
   updateScore();
 }
 
@@ -169,40 +229,29 @@ function checkClear() {
   let cols = [];
 
   for (let y = 0; y < BOARD_SIZE; y++) {
-    if (board.slice(y * BOARD_SIZE, y * BOARD_SIZE + BOARD_SIZE).every(v => v)) {
+    if (board.slice(y * BOARD_SIZE, y * BOARD_SIZE + BOARD_SIZE).every(v => v))
       rows.push(y);
-    }
   }
 
   for (let x = 0; x < BOARD_SIZE; x++) {
     let full = true;
     for (let y = 0; y < BOARD_SIZE; y++) {
-      if (!board[y * BOARD_SIZE + x]) {
-        full = false;
-        break;
-      }
+      if (!board[y * BOARD_SIZE + x]) { full = false; break; }
     }
     if (full) cols.push(x);
   }
 
   if (!rows.length && !cols.length) return;
 
-  let cleared = rows.length + cols.length;
-  let comboScore = cleared * 100;
-
+  const cleared = rows.length + cols.length;
   rows.forEach(y => {
-    for (let x = 0; x < BOARD_SIZE; x++) {
-      clearCell(y * BOARD_SIZE + x);
-    }
+    for (let x = 0; x < BOARD_SIZE; x++) clearCell(y * BOARD_SIZE + x);
   });
-
   cols.forEach(x => {
-    for (let y = 0; y < BOARD_SIZE; y++) {
-      clearCell(y * BOARD_SIZE + x);
-    }
+    for (let y = 0; y < BOARD_SIZE; y++) clearCell(y * BOARD_SIZE + x);
   });
 
-  score += comboScore;
+  score += cleared * 100;
   updateScore();
   showCombo(cleared);
 }
@@ -213,20 +262,20 @@ function clearCell(i) {
 }
 
 /* =========================
-   COMBO FX
+   FX
 ========================= */
 function showCombo(count) {
-  const txt = document.createElement("div");
-  txt.className = "floating-text";
-  txt.textContent = count > 1 ? `COMBO x${count}` : "+CLEAR";
-  txt.style.left = "50%";
-  txt.style.top = "140px";
-  fxLayer.appendChild(txt);
-  setTimeout(() => txt.remove(), 600);
+  const t = document.createElement("div");
+  t.className = "floating-text";
+  t.textContent = count > 1 ? `COMBO x${count}` : "+CLEAR";
+  t.style.left = "50%";
+  t.style.top = "140px";
+  fxLayer.appendChild(t);
+  setTimeout(() => t.remove(), 600);
 }
 
 /* =========================
-   SCORE
+   SCORE & GAME OVER
 ========================= */
 function updateScore() {
   scoreEl.textContent = score;
@@ -237,15 +286,21 @@ function updateScore() {
   }
 }
 
-/* =========================
-   GAME OVER
-========================= */
 function isGameOver() {
   return [...blockListEl.children].every(b => !canPlaceAnywhere(b.shape));
 }
 
 function showGameOver() {
   document.getElementById("game-over").classList.remove("hidden");
+}
+
+/* =========================
+   UTIL
+========================= */
+function getCellFromPoint(x, y) {
+  return document.elementFromPoint(x, y)?.classList.contains("cell")
+    ? document.elementFromPoint(x, y)
+    : null;
 }
 
 /* =========================
