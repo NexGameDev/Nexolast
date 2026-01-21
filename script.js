@@ -10,6 +10,7 @@ let board = [];
 let draggingBlock = null;
 let ghostEl = null;
 let ghostOffset = { x: 0, y: 0 };
+let dragAnchor = { x: 0, y: 0 };
 
 let score = 0;
 let best = localStorage.getItem("nexolast-best") || 0;
@@ -52,13 +53,22 @@ function initBoard() {
 }
 
 /* =========================
-   BLOCK GENERATOR (SAFE)
+   BLOCK GENERATOR
 ========================= */
 function generateBlocks() {
   blockListEl.innerHTML = "";
+  let guaranteed = false;
 
   for (let i = 0; i < 3; i++) {
-    let shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+    let shape;
+    if (!guaranteed) {
+      const possible = SHAPES.filter(s => canPlaceAnywhere(s));
+      if (possible.length) {
+        shape = possible[Math.floor(Math.random() * possible.length)];
+        guaranteed = true;
+      }
+    }
+    if (!shape) shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
     createBlock(shape);
   }
 }
@@ -82,12 +92,24 @@ function createBlock(shape) {
 }
 
 /* =========================
-   DRAG SYSTEM (NO TAP)
+   DRAG SYSTEM (FINAL FIX)
 ========================= */
 function startDrag(e, block) {
   e.preventDefault();
   draggingBlock = block;
   block.classList.add("selected");
+
+  // cari anchor shape (sel pertama bernilai 1)
+  outer:
+  for (let r = 0; r < block.shape.length; r++) {
+    for (let c = 0; c < block.shape[r].length; c++) {
+      if (block.shape[r][c]) {
+        dragAnchor.x = c;
+        dragAnchor.y = r;
+        break outer;
+      }
+    }
+  }
 
   ghostEl = block.cloneNode(true);
   ghostEl.style.position = "fixed";
@@ -116,9 +138,13 @@ function moveGhost(e) {
   const cell = getCellFromPoint(e.clientX, e.clientY);
   if (!cell) return;
 
-  const index = Number(cell.dataset.index);
-  const x = index % BOARD_SIZE;
-  const y = Math.floor(index / BOARD_SIZE);
+  let index = Number(cell.dataset.index);
+  let x = index % BOARD_SIZE;
+  let y = Math.floor(index / BOARD_SIZE);
+
+  // 🔥 FIX: anchor offset
+  x -= dragAnchor.x;
+  y -= dragAnchor.y;
 
   const valid = canPlace(draggingBlock.shape, x, y);
   previewPlacement(draggingBlock.shape, x, y, valid);
@@ -129,16 +155,18 @@ function endDrag(e) {
 
   const cell = getCellFromPoint(e.clientX, e.clientY);
   if (cell && draggingBlock) {
-    const index = Number(cell.dataset.index);
-    const x = index % BOARD_SIZE;
-    const y = Math.floor(index / BOARD_SIZE);
+    let index = Number(cell.dataset.index);
+    let x = index % BOARD_SIZE;
+    let y = Math.floor(index / BOARD_SIZE);
+
+    // 🔥 FIX: anchor offset
+    x -= dragAnchor.x;
+    y -= dragAnchor.y;
 
     if (canPlace(draggingBlock.shape, x, y)) {
       placeBlock(draggingBlock.shape, x, y);
       draggingBlock.remove();
-
       checkClear();
-
       if (!blockListEl.children.length) generateBlocks();
       if (isGameOver()) showGameOver();
     }
@@ -169,7 +197,8 @@ function previewPlacement(shape, x, y, valid) {
 }
 
 function clearPreview() {
-  document.querySelectorAll(".preview-valid, .preview-invalid")
+  document
+    .querySelectorAll(".cell.preview-valid, .cell.preview-invalid")
     .forEach(c => c.classList.remove("preview-valid", "preview-invalid"));
 }
 
@@ -203,7 +232,7 @@ function placeBlock(shape, x, y) {
       if (!cell) return;
       const idx = (y + r) * BOARD_SIZE + (x + c);
       board[idx] = 1;
-      boardEl.children[idx].classList.add("filled");
+      boardEl.children[idx].classList.add("filled", "pop");
       added++;
     });
   });
@@ -226,10 +255,7 @@ function checkClear() {
   for (let x = 0; x < BOARD_SIZE; x++) {
     let full = true;
     for (let y = 0; y < BOARD_SIZE; y++) {
-      if (!board[y * BOARD_SIZE + x]) {
-        full = false;
-        break;
-      }
+      if (!board[y * BOARD_SIZE + x]) { full = false; break; }
     }
     if (full) cols.push(x);
   }
@@ -293,7 +319,7 @@ function showGameOver() {
 ========================= */
 function getCellFromPoint(x, y) {
   const el = document.elementFromPoint(x, y);
-  return el && el.classList.contains("cell") ? el : null;
+  return el?.classList.contains("cell") ? el : null;
 }
 
 /* =========================
