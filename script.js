@@ -10,7 +10,6 @@ let board = [];
 let draggingBlock = null;
 let ghostEl = null;
 let ghostOffset = { x: 0, y: 0 };
-let dragAnchor = { x: 0, y: 0 };
 
 let score = 0;
 let best = localStorage.getItem("nexolast-best") || 0;
@@ -19,6 +18,35 @@ const scoreEl = document.getElementById("score");
 const bestEl = document.getElementById("best");
 scoreEl.textContent = score;
 bestEl.textContent = best;
+
+/* =========================
+   SOUND SYSTEM (SYNCED)
+========================= */
+const SFX = {
+  place: new Audio("sound/place.mp3"),
+  clear: new Audio("sound/clear.mp3"),
+  combo: new Audio("sound/combo.mp3"),
+  gameover: new Audio("sound/gameover.mp3"),
+};
+
+Object.values(SFX).forEach(a => {
+  a.volume = 0.7;
+  a.preload = "auto";
+});
+
+function playSfx(name) {
+  const s = SFX[name];
+  if (!s) return;
+  s.currentTime = 0;
+  s.play().catch(()=>{});
+}
+
+// unlock audio for mobile
+document.body.addEventListener("pointerdown", () => {
+  Object.values(SFX).forEach(a => {
+    a.play().then(() => a.pause()).catch(()=>{});
+  });
+}, { once:true });
 
 /* =========================
    BLOCK SHAPES
@@ -92,30 +120,16 @@ function createBlock(shape) {
 }
 
 /* =========================
-   DRAG SYSTEM (FINAL FIX)
+   DRAG SYSTEM
 ========================= */
 function startDrag(e, block) {
-  e.preventDefault();
   draggingBlock = block;
-  block.classList.add("selected");
-
-  // cari anchor shape (sel pertama bernilai 1)
-  outer:
-  for (let r = 0; r < block.shape.length; r++) {
-    for (let c = 0; c < block.shape[r].length; c++) {
-      if (block.shape[r][c]) {
-        dragAnchor.x = c;
-        dragAnchor.y = r;
-        break outer;
-      }
-    }
-  }
 
   ghostEl = block.cloneNode(true);
   ghostEl.style.position = "fixed";
   ghostEl.style.pointerEvents = "none";
   ghostEl.style.opacity = "0.85";
-  ghostEl.style.zIndex = "9999";
+  ghostEl.style.zIndex = "999";
   document.body.appendChild(ghostEl);
 
   const rect = block.getBoundingClientRect();
@@ -124,11 +138,11 @@ function startDrag(e, block) {
 
   moveGhost(e);
   document.addEventListener("pointermove", moveGhost);
-  document.addEventListener("pointerup", endDrag, { once: true });
+  document.addEventListener("pointerup", endDrag);
 }
 
 function moveGhost(e) {
-  if (!ghostEl || !draggingBlock) return;
+  if (!ghostEl) return;
 
   ghostEl.style.left = e.clientX - ghostOffset.x + "px";
   ghostEl.style.top = e.clientY - ghostOffset.y + "px";
@@ -138,44 +152,40 @@ function moveGhost(e) {
   const cell = getCellFromPoint(e.clientX, e.clientY);
   if (!cell) return;
 
-  let index = Number(cell.dataset.index);
-  let x = index % BOARD_SIZE;
-  let y = Math.floor(index / BOARD_SIZE);
+  const index = +cell.dataset.index;
+  const x = index % BOARD_SIZE;
+  const y = Math.floor(index / BOARD_SIZE);
 
-  // 🔥 FIX: anchor offset
-  x -= dragAnchor.x;
-  y -= dragAnchor.y;
-
-  const valid = canPlace(draggingBlock.shape, x, y);
-  previewPlacement(draggingBlock.shape, x, y, valid);
+  previewPlacement(draggingBlock.shape, x, y, canPlace(draggingBlock.shape, x, y));
 }
 
 function endDrag(e) {
+  document.removeEventListener("pointermove", moveGhost);
+  document.removeEventListener("pointerup", endDrag);
+
   clearPreview();
 
   const cell = getCellFromPoint(e.clientX, e.clientY);
-  if (cell && draggingBlock) {
-    let index = Number(cell.dataset.index);
-    let x = index % BOARD_SIZE;
-    let y = Math.floor(index / BOARD_SIZE);
-
-    // 🔥 FIX: anchor offset
-    x -= dragAnchor.x;
-    y -= dragAnchor.y;
+  if (cell) {
+    const index = +cell.dataset.index;
+    const x = index % BOARD_SIZE;
+    const y = Math.floor(index / BOARD_SIZE);
 
     if (canPlace(draggingBlock.shape, x, y)) {
       placeBlock(draggingBlock.shape, x, y);
+      playSfx("place");
+
       draggingBlock.remove();
       checkClear();
+
       if (!blockListEl.children.length) generateBlocks();
       if (isGameOver()) showGameOver();
     }
   }
 
-  draggingBlock?.classList.remove("selected");
-  draggingBlock = null;
   ghostEl?.remove();
   ghostEl = null;
+  draggingBlock = null;
 }
 
 /* =========================
@@ -189,32 +199,27 @@ function previewPlacement(shape, x, y, valid) {
       const ny = y + r;
       if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) return;
       const idx = ny * BOARD_SIZE + nx;
-      boardEl.children[idx].classList.add(
-        valid ? "preview-valid" : "preview-invalid"
-      );
+      boardEl.children[idx].classList.add(valid ? "preview-valid" : "preview-invalid");
     });
   });
 }
 
 function clearPreview() {
-  document
-    .querySelectorAll(".cell.preview-valid, .cell.preview-invalid")
-    .forEach(c => c.classList.remove("preview-valid", "preview-invalid"));
+  document.querySelectorAll(".cell.preview-valid,.cell.preview-invalid")
+    .forEach(c => c.classList.remove("preview-valid","preview-invalid"));
 }
 
 /* =========================
    BOARD LOGIC
 ========================= */
 function canPlace(shape, x, y) {
-  for (let r = 0; r < shape.length; r++) {
+  for (let r = 0; r < shape.length; r++)
     for (let c = 0; c < shape[r].length; c++) {
       if (!shape[r][c]) continue;
-      const nx = x + c;
-      const ny = y + r;
+      const nx = x + c, ny = y + r;
       if (nx < 0 || ny < 0 || nx >= BOARD_SIZE || ny >= BOARD_SIZE) return false;
       if (board[ny * BOARD_SIZE + nx]) return false;
     }
-  }
   return true;
 }
 
@@ -232,7 +237,7 @@ function placeBlock(shape, x, y) {
       if (!cell) return;
       const idx = (y + r) * BOARD_SIZE + (x + c);
       board[idx] = 1;
-      boardEl.children[idx].classList.add("filled", "pop");
+      boardEl.children[idx].classList.add("filled","pop");
       added++;
     });
   });
@@ -241,35 +246,35 @@ function placeBlock(shape, x, y) {
 }
 
 /* =========================
-   CLEAR & COMBO
+   CLEAR & COMBO (SYNC SOUND)
 ========================= */
 function checkClear() {
-  let rows = [];
-  let cols = [];
+  let rows = [], cols = [];
 
-  for (let y = 0; y < BOARD_SIZE; y++) {
-    if (board.slice(y * BOARD_SIZE, y * BOARD_SIZE + BOARD_SIZE).every(v => v))
+  for (let y = 0; y < BOARD_SIZE; y++)
+    if (board.slice(y*BOARD_SIZE,y*BOARD_SIZE+BOARD_SIZE).every(v=>v))
       rows.push(y);
-  }
 
   for (let x = 0; x < BOARD_SIZE; x++) {
     let full = true;
-    for (let y = 0; y < BOARD_SIZE; y++) {
-      if (!board[y * BOARD_SIZE + x]) { full = false; break; }
-    }
+    for (let y = 0; y < BOARD_SIZE; y++)
+      if (!board[y*BOARD_SIZE+x]) { full=false; break; }
     if (full) cols.push(x);
   }
 
   if (!rows.length && !cols.length) return;
 
-  const cleared = rows.length + cols.length;
-
   rows.forEach(y => {
-    for (let x = 0; x < BOARD_SIZE; x++) clearCell(y * BOARD_SIZE + x);
+    for (let x = 0; x < BOARD_SIZE; x++) clearCell(y*BOARD_SIZE+x);
   });
   cols.forEach(x => {
-    for (let y = 0; y < BOARD_SIZE; y++) clearCell(y * BOARD_SIZE + x);
+    for (let y = 0; y < BOARD_SIZE; y++) clearCell(y*BOARD_SIZE+x);
   });
+
+  const cleared = rows.length + cols.length;
+  setTimeout(() => {
+    playSfx(cleared > 1 ? "combo" : "clear");
+  }, 80);
 
   score += cleared * 100;
   updateScore();
@@ -291,7 +296,7 @@ function showCombo(count) {
   t.style.left = "50%";
   t.style.top = "140px";
   fxLayer.appendChild(t);
-  setTimeout(() => t.remove(), 600);
+  setTimeout(()=>t.remove(),600);
 }
 
 /* =========================
@@ -311,6 +316,7 @@ function isGameOver() {
 }
 
 function showGameOver() {
+  playSfx("gameover");
   document.getElementById("game-over").classList.remove("hidden");
 }
 
@@ -319,7 +325,7 @@ function showGameOver() {
 ========================= */
 function getCellFromPoint(x, y) {
   const el = document.elementFromPoint(x, y);
-  return el?.classList.contains("cell") ? el : null;
+  return el && el.classList.contains("cell") ? el : null;
 }
 
 /* =========================
