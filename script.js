@@ -52,23 +52,13 @@ function initBoard() {
 }
 
 /* =========================
-   BLOCK GENERATOR (SMART)
+   BLOCK GENERATOR (SAFE)
 ========================= */
 function generateBlocks() {
   blockListEl.innerHTML = "";
-  let guaranteed = false;
 
   for (let i = 0; i < 3; i++) {
-    let shape;
-
-    if (!guaranteed) {
-      const possible = SHAPES.filter(s => canPlaceAnywhere(s));
-      if (possible.length) {
-        shape = possible[Math.floor(Math.random() * possible.length)];
-        guaranteed = true;
-      }
-    }
-    if (!shape) shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+    let shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
     createBlock(shape);
   }
 }
@@ -92,17 +82,18 @@ function createBlock(shape) {
 }
 
 /* =========================
-   DRAG SYSTEM
+   DRAG SYSTEM (NO TAP)
 ========================= */
 function startDrag(e, block) {
+  e.preventDefault();
   draggingBlock = block;
   block.classList.add("selected");
 
   ghostEl = block.cloneNode(true);
   ghostEl.style.position = "fixed";
   ghostEl.style.pointerEvents = "none";
-  ghostEl.style.opacity = "0.8";
-  ghostEl.style.zIndex = "999";
+  ghostEl.style.opacity = "0.85";
+  ghostEl.style.zIndex = "9999";
   document.body.appendChild(ghostEl);
 
   const rect = block.getBoundingClientRect();
@@ -111,11 +102,11 @@ function startDrag(e, block) {
 
   moveGhost(e);
   document.addEventListener("pointermove", moveGhost);
-  document.addEventListener("pointerup", endDrag);
+  document.addEventListener("pointerup", endDrag, { once: true });
 }
 
 function moveGhost(e) {
-  if (!ghostEl) return;
+  if (!ghostEl || !draggingBlock) return;
 
   ghostEl.style.left = e.clientX - ghostOffset.x + "px";
   ghostEl.style.top = e.clientY - ghostOffset.y + "px";
@@ -125,7 +116,7 @@ function moveGhost(e) {
   const cell = getCellFromPoint(e.clientX, e.clientY);
   if (!cell) return;
 
-  const index = +cell.dataset.index;
+  const index = Number(cell.dataset.index);
   const x = index % BOARD_SIZE;
   const y = Math.floor(index / BOARD_SIZE);
 
@@ -134,34 +125,33 @@ function moveGhost(e) {
 }
 
 function endDrag(e) {
-  document.removeEventListener("pointermove", moveGhost);
-  document.removeEventListener("pointerup", endDrag);
-
   clearPreview();
 
   const cell = getCellFromPoint(e.clientX, e.clientY);
-  if (cell) {
-    const index = +cell.dataset.index;
+  if (cell && draggingBlock) {
+    const index = Number(cell.dataset.index);
     const x = index % BOARD_SIZE;
     const y = Math.floor(index / BOARD_SIZE);
 
     if (canPlace(draggingBlock.shape, x, y)) {
       placeBlock(draggingBlock.shape, x, y);
       draggingBlock.remove();
+
       checkClear();
+
       if (!blockListEl.children.length) generateBlocks();
       if (isGameOver()) showGameOver();
     }
   }
 
-  draggingBlock.classList.remove("selected");
+  draggingBlock?.classList.remove("selected");
   draggingBlock = null;
   ghostEl?.remove();
   ghostEl = null;
 }
 
 /* =========================
-   PREVIEW / HIGHLIGHT
+   PREVIEW
 ========================= */
 function previewPlacement(shape, x, y, valid) {
   shape.forEach((row, r) => {
@@ -179,7 +169,7 @@ function previewPlacement(shape, x, y, valid) {
 }
 
 function clearPreview() {
-  document.querySelectorAll(".cell.preview-valid, .cell.preview-invalid")
+  document.querySelectorAll(".preview-valid, .preview-invalid")
     .forEach(c => c.classList.remove("preview-valid", "preview-invalid"));
 }
 
@@ -213,7 +203,7 @@ function placeBlock(shape, x, y) {
       if (!cell) return;
       const idx = (y + r) * BOARD_SIZE + (x + c);
       board[idx] = 1;
-      boardEl.children[idx].classList.add("filled", "pop");
+      boardEl.children[idx].classList.add("filled");
       added++;
     });
   });
@@ -236,7 +226,10 @@ function checkClear() {
   for (let x = 0; x < BOARD_SIZE; x++) {
     let full = true;
     for (let y = 0; y < BOARD_SIZE; y++) {
-      if (!board[y * BOARD_SIZE + x]) { full = false; break; }
+      if (!board[y * BOARD_SIZE + x]) {
+        full = false;
+        break;
+      }
     }
     if (full) cols.push(x);
   }
@@ -244,6 +237,7 @@ function checkClear() {
   if (!rows.length && !cols.length) return;
 
   const cleared = rows.length + cols.length;
+
   rows.forEach(y => {
     for (let x = 0; x < BOARD_SIZE; x++) clearCell(y * BOARD_SIZE + x);
   });
@@ -298,9 +292,8 @@ function showGameOver() {
    UTIL
 ========================= */
 function getCellFromPoint(x, y) {
-  return document.elementFromPoint(x, y)?.classList.contains("cell")
-    ? document.elementFromPoint(x, y)
-    : null;
+  const el = document.elementFromPoint(x, y);
+  return el && el.classList.contains("cell") ? el : null;
 }
 
 /* =========================
