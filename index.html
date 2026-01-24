@@ -54,23 +54,32 @@
 
   <!-- ================= MAIN ================= -->
   <main id="main" class="hidden">
-
     <div id="board-wrapper">
       <div id="board" data-size="8"></div>
     </div>
 
     <div id="block-list"></div>
-
   </main>
 
   <!-- FX -->
   <div id="fx-layer"></div>
 
-  <!-- GAME OVER -->
+  <!-- ================= GAME OVER ================= -->
   <div id="game-over" class="hidden">
     <div class="game-over-box">
       <h2>GAME OVER</h2>
-      <button id="restart">RESTART</button>
+      <button onclick="restartGame()">RESTART</button>
+    </div>
+  </div>
+
+  <!-- ================= YOU WIN ================= -->
+  <div id="you-win" class="hidden">
+    <div class="game-over-box">
+      <h2>YOU WON!</h2>
+      <p style="font-size:9px;opacity:.7;margin-bottom:14px;">
+        ALL OBSTACLES CLEARED
+      </p>
+      <button onclick="restartGame()">PLAY AGAIN</button>
     </div>
   </div>
 
@@ -83,30 +92,29 @@ const header   = document.getElementById("header");
 const main     = document.getElementById("main");
 const styleEl  = document.getElementById("game-style");
 
-let gameScript = null;
+let gameLoaded = false;
 
 document.querySelectorAll(".mode-btn").forEach(btn=>{
   btn.addEventListener("click", ()=>{
-    btn.classList.add("pop");
+    if(gameLoaded) return;
+    gameLoaded = true;
 
     const mode = btn.dataset.mode;
 
-    // hide menu
     modeMenu.style.display = "none";
     header.classList.remove("hidden");
     main.classList.remove("hidden");
 
-    // load correct css & js
+    const s = document.createElement("script");
+
     if(mode === "obstacle"){
       styleEl.href = "obstacle.css";
-      gameScript = "obstacle.js";
+      s.src = "obstacle.js";
     }else{
       styleEl.href = "style.css";
-      gameScript = "script.js";
+      s.src = "script.js";
     }
 
-    const s = document.createElement("script");
-    s.src = gameScript;
     document.body.appendChild(s);
   });
 });
